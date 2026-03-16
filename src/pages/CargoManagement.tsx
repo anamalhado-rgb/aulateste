@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   TrendingUp, 
@@ -27,6 +27,7 @@ import {
   LineChart,
   Line
 } from 'recharts';
+import { supabase } from '../lib/supabase';
 
 const cargoVolumeTrend = [
   { day: 'Mon', volume: 4500 },
@@ -38,7 +39,7 @@ const cargoVolumeTrend = [
   { day: 'Sun', volume: 3800 },
 ];
 
-const activeManifest = [
+const initialManifests = [
   { id: 'M-1024', vessel: 'MSC Isabella', type: 'Container', weight: '12,450 kg', status: 'In Progress', progress: 65 },
   { id: 'M-1026', vessel: 'Ever Given', type: 'Container', weight: '8,920 kg', status: 'Scheduled', progress: 0 },
   { id: 'M-1028', vessel: 'Maersk Tallinn', type: 'Bulk', weight: '24,500 kg', status: 'Completed', progress: 100 },
@@ -46,6 +47,41 @@ const activeManifest = [
 ];
 
 export const CargoManagement: React.FC = () => {
+  const [manifests, setManifests] = useState<any[]>(initialManifests);
+  const [isLoading, setIsLoading] = useState(false);
+  const isSupabaseConfigured = !import.meta.env.VITE_SUPABASE_URL?.includes('placeholder');
+
+  useEffect(() => {
+    if (isSupabaseConfigured) {
+      fetchManifests();
+    }
+  }, []);
+
+  const fetchManifests = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('cargo_manifests')
+        .select('*, vessels(name)')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      if (data && data.length > 0) {
+        setManifests(data.map(m => ({
+          id: m.manifest_id,
+          vessel: m.vessels?.name || 'Unknown',
+          type: m.type,
+          weight: `${m.weight_kg.toLocaleString()} kg`,
+          status: m.status,
+          progress: m.progress
+        })));
+      }
+    } catch (err) {
+      console.error('Error fetching manifests:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <div className="space-y-8">
       {/* Page Header */}
@@ -186,7 +222,7 @@ export const CargoManagement: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {activeManifest.map((manifest) => (
+              {manifests.map((manifest) => (
                 <tr key={manifest.id} className="group hover:bg-slate-50/50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">

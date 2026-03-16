@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Ship, 
   Anchor, 
@@ -11,8 +11,20 @@ import {
   CheckCircle2,
   AlertCircle
 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
-const vesselSchedule = [
+interface Vessel {
+  id: string;
+  vessel_id: string;
+  name: string;
+  type: string;
+  eta: string;
+  status: string;
+  berth: string;
+  progress: number;
+}
+
+const initialVessels = [
   { id: 'V-102', name: 'MSC Isabella', type: 'Container Ship', eta: '14:30', status: 'Approaching', berth: 'Berth 04', progress: 85 },
   { id: 'V-105', name: 'Ever Given', type: 'Container Ship', eta: '16:45', status: 'Scheduled', berth: 'Berth 01', progress: 0 },
   { id: 'V-108', name: 'Maersk Tallinn', type: 'Bulk Carrier', eta: '18:20', status: 'Delayed', berth: 'Berth 07', progress: 40 },
@@ -21,6 +33,42 @@ const vesselSchedule = [
 ];
 
 export const VesselControl: React.FC = () => {
+  const [vessels, setVessels] = useState<any[]>(initialVessels);
+  const [isLoading, setIsLoading] = useState(false);
+  const isSupabaseConfigured = !import.meta.env.VITE_SUPABASE_URL?.includes('placeholder');
+
+  useEffect(() => {
+    if (isSupabaseConfigured) {
+      fetchVessels();
+    }
+  }, []);
+
+  const fetchVessels = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('vessels')
+        .select('*, berths(name)')
+        .order('eta', { ascending: true });
+
+      if (error) throw error;
+      if (data && data.length > 0) {
+        setVessels(data.map(v => ({
+          id: v.vessel_id,
+          name: v.name,
+          type: v.type,
+          eta: v.eta ? new Date(v.eta).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A',
+          status: v.status,
+          berth: v.berths?.name || 'Unassigned',
+          progress: v.progress
+        })));
+      }
+    } catch (err) {
+      console.error('Error fetching vessels:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <div className="space-y-8">
       {/* Page Header */}
@@ -106,7 +154,7 @@ export const VesselControl: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {vesselSchedule.map((vessel) => (
+              {vessels.map((vessel) => (
                 <tr key={vessel.id} className="group hover:bg-slate-50/50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">

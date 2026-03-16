@@ -10,6 +10,7 @@ import { VesselControl } from './pages/VesselControl';
 import { PassengerMovement } from './pages/PassengerMovement';
 import { CargoManagement } from './pages/CargoManagement';
 import { BlockchainTracking } from './pages/BlockchainTracking';
+import { UserManagement } from './pages/UserManagement';
 import { Login } from './pages/Login';
 import { Layout } from './components/Layout';
 
@@ -43,6 +44,7 @@ export default function App() {
       {activePage === 'passenger-movement' && <PassengerMovement />}
       {activePage === 'cargo-management' && <CargoManagement />}
       {activePage === 'blockchain-tracking' && <BlockchainTracking />}
+      {activePage === 'user-management' && <UserManagement />}
     </Layout>
   );
 }

@@ -31,6 +31,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate
     { id: 'passenger-movement', label: 'Passenger Movement', icon: Users },
     { id: 'cargo-management', label: 'Cargo Management', icon: Box },
     { id: 'blockchain-tracking', label: 'Blockchain Tracking', icon: LinkIcon },
+    { id: 'user-management', label: 'User Management', icon: Users },
   ];
 
   return (
